@@ -343,7 +343,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
     }
 
     if (errors.length) {
-        const heading = document.createElement('h1');
+        const heading = document.createElement('h2');
         heading.innerText = "Distributive Law Errors";
         distributiveLawErrorsSectionElement.appendChild(heading);
 
@@ -358,7 +358,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
 
         distributiveLawErrorsSectionElement.appendChild(errorListElement);
     } else {
-        const heading = document.createElement('h1');
+        const heading = document.createElement('h2');
         heading.innerText = "No Distributive Law Errors";
         distributiveLawErrorsSectionElement.appendChild(heading);
     }
@@ -378,4 +378,14 @@ const getIndex = (label) => {
     return label.charCodeAt(0) - baseChar.charCodeAt(0) + offset;
 }
 
-setupGame(5);
+const resetButtonElement = document.getElementsByClassName('start-button')[0];
+const sizeInputElement = document.getElementsByClassName('size-input')[0];
+sizeInputElement.value = 5;
+
+setupGame(Number.parseInt(sizeInputElement.value));
+
+
+resetButtonElement.addEventListener('click', () => {
+    const size = Number.parseInt(sizeInputElement.value);
+    setupGame(size);
+});

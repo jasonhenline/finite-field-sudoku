@@ -1,9 +1,11 @@
 * {
     font-family:Arial, Helvetica, sans-serif;
+    text-align: center;
 }
 
 table {
     border-collapse: collapse;
+    font-size: 24px;
 }
 
 table, th, td {
@@ -38,10 +40,6 @@ td {
     color: red;
 }
 
-.operation-label-cell {
-    font-size: 28px;
-}
-
 body {
     display: flex;
     flex-direction: column;
@@ -59,4 +57,8 @@ body {
 
 .error-messages {
     color: red;
+}
+
+.size-input, .start-button {
+    font-size: 20px;
 }
