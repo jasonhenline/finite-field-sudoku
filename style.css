@@ -56,3 +56,7 @@ body {
 .play-area * + * {
     margin-left: 30px;
 }
+
+.error-messages {
+    color: red;
+}

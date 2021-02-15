@@ -7,7 +7,10 @@ class OperationTable {
         window.addEventListener('keydown', (event) => {
             if (event.key == "Escape") {
                 this.clearSelection();
-            } else if (event.key == "Backspace" || event.key == "Delete") {
+            } else if (event.key == "Backspace") {
+                this.setValueAtSelection('');
+                this.moveSelection({dx: -1, dy: 0});
+            } else if(event.key == "Delete") {
                 this.setValueAtSelection('');
             } else if (event.key == "ArrowDown") {
                 this.moveSelection({dx: 0, dy: 1});
@@ -27,6 +30,10 @@ class OperationTable {
                 }
             }
         });
+    }
+
+    registerChangeListener(listenFunction) {
+        this.listenFunction = listenFunction;
     }
 
     createTableElement(size) {
@@ -78,6 +85,8 @@ class OperationTable {
         const mirroredSelectedElement = this.getElementAtCoordinate({x: this.selectedCoordinate.y, y: this.selectedCoordinate.x});
         mirroredSelectedElement.innerText = value;
         this.setErrors();
+
+        this.listenFunction && this.listenFunction();
     }
 
     setErrors() {
@@ -278,6 +287,81 @@ const setupGame = (size) => {
 
     additionTableElement.addEventListener('click', () => multiplicationTable.clearSelection());
     multiplicationTableElement.addEventListener('click', () => additionTable.clearSelection());
+
+    const checkDistributiveLaw = getDistributiveLawChecker(additionTable, multiplicationTable);
+    additionTable.registerChangeListener(checkDistributiveLaw);
+    multiplicationTable.registerChangeListener(checkDistributiveLaw);
+    checkDistributiveLaw();
+}
+
+const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => {
+    const errors = [];
+    const size = additionTable.size;
+
+    // Check that i * (j + k) == i * j + i * k.
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            for (let k = j; k < size; k++) {
+                const jPlusKLabel = additionTable.getElementAtCoordinate({x: j, y: k}).innerText;
+                if (jPlusKLabel === '') {
+                    continue;
+                }
+                jPlusKIndex = getIndex(jPlusKLabel);
+                const iTimesJPlusKLabel = multiplicationTable.getElementAtCoordinate({x: i, y: jPlusKIndex}).innerText;
+                if (iTimesJPlusKLabel === '') {
+                    continue;
+                }
+
+                const iTimesJLabel = multiplicationTable.getElementAtCoordinate({x: i, y: j}).innerText;
+                if (iTimesJLabel === '') {
+                    continue;
+                }
+                const iTimesJIndex = getIndex(iTimesJLabel);
+
+                const iTimesKLabel = multiplicationTable.getElementAtCoordinate({x: i, y: k}).innerText;
+                if (iTimesKLabel === '') {
+                    continue;
+                }
+                const iTimesKIndex = getIndex(iTimesKLabel);
+
+                const iTimesJPlusITimesKLabel = additionTable.getElementAtCoordinate({x: iTimesJIndex, y: iTimesKIndex}).innerText;
+                if (iTimesJPlusITimesKLabel === '') {
+                    continue;
+                }
+
+                if (iTimesJPlusKLabel !== iTimesJPlusITimesKLabel) {
+                    const [iLabel, jLabel, kLabel] = [i, j, k].map(getLabel);
+                    errors.push(`${iLabel}*(${jLabel} + ${kLabel}) = ${iTimesJPlusKLabel} does not equal ${iLabel}*${jLabel} + ${iLabel}*${kLabel} = ${iTimesJPlusITimesKLabel}`);
+                }
+            }
+        }
+    }
+
+    const distributiveLawErrorsSectionElement = document.getElementsByClassName('distributive-law-errors-section')[0];
+    while (distributiveLawErrorsSectionElement.firstChild) {
+        distributiveLawErrorsSectionElement.removeChild(distributiveLawErrorsSectionElement.firstChild);
+    }
+
+    if (errors.length) {
+        const heading = document.createElement('h1');
+        heading.innerText = "Distributive Law Errors";
+        distributiveLawErrorsSectionElement.appendChild(heading);
+
+        const errorListElement = document.createElement('ul');
+        errorListElement.classList.add('error-messages');
+
+        for (let errorMessage of errors) {
+            const errorListItem = document.createElement('li');
+            errorListItem.innerText = errorMessage;
+            errorListElement.appendChild(errorListItem);
+        }
+
+        distributiveLawErrorsSectionElement.appendChild(errorListElement);
+    } else {
+        const heading = document.createElement('h1');
+        heading.innerText = "No Distributive Law Errors";
+        distributiveLawErrorsSectionElement.appendChild(heading);
+    }
 }
 
 const getLabel = (index) => {
@@ -285,6 +369,13 @@ const getLabel = (index) => {
         return index.toString();
     }
     return String.fromCharCode('a'.charCodeAt(0) + index - 2);
+}
+
+const getIndex = (label) => {
+    const isDigit = label == '0' || label == '1';
+    const baseChar = isDigit ? '0' : 'a';
+    const offset = isDigit ? 0 : 2
+    return label.charCodeAt(0) - baseChar.charCodeAt(0) + offset;
 }
 
 setupGame(5);
