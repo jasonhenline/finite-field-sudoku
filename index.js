@@ -173,6 +173,7 @@ class AdditionTable extends OperationTable {
                 }
                 if (this.isValidSelection({x, y})) {
                     cell.addEventListener('click', () => this.setSelectedCoordinate({x, y}));
+                    cell.classList.add('selectable');
                 } else {
                     cell.classList.add('pre-filled');
                 }
@@ -240,6 +241,7 @@ class MultiplicationTable extends OperationTable {
                 }
                 if (this.isValidSelection({x, y})) {
                     cell.addEventListener('click', () => this.setSelectedCoordinate({x, y}));
+                    cell.classList.add('selectable');
                 } else {
                     cell.classList.add('pre-filled');
                 }
