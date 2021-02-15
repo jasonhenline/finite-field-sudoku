@@ -1,8 +1,8 @@
-class AdditionTable {
+class OperationTable {
     constructor(size) {
         this.size = size;
 
-        this.setupTableElement(size);
+        this.tableElement = this.createTableElement(size);
 
         window.addEventListener('keydown', (event) => {
             if (event.key == "Escape") {
@@ -29,50 +29,12 @@ class AdditionTable {
         });
     }
 
-    setupTableElement(size) {
-        this.tableElement = document.createElement('table');
+    createTableElement(size) {
+        throw new Error('Subclasses must implement this method.');
+    }
 
-        const topRow = document.createElement('tr');
-
-        const operationLabelCell = document.createElement('td');
-        operationLabelCell.innerText = '+';
-        operationLabelCell.classList.add('operation-label-cell');
-
-        topRow.appendChild(operationLabelCell);
-
-        for (let x = 0; x < size; x++) {
-            const labelCell = document.createElement('td');
-            labelCell.innerText = getLabel(x);
-            labelCell.classList.add('label-cell');
-            topRow.appendChild(labelCell);
-        }
-
-        this.tableElement.appendChild(topRow);
-
-        for (let y = 0; y < size; y++) {
-            const row = document.createElement('tr');
-            const labelCell = document.createElement('td');
-            labelCell.innerText = getLabel(y);
-            labelCell.classList.add('label-cell');
-            row.appendChild(labelCell);
-            for (let x = 0; x < size; x++) {
-                const cell = document.createElement('td');
-                if (y == 0) {
-                    cell.innerText = getLabel(x);
-                    cell.classList.add('pre-filled');
-                } else if (x === 0) {
-                    cell.innerText = getLabel(y);
-                    cell.classList.add('pre-filled');
-                }
-                if (this.isValidSelection({x, y})) {
-                    cell.addEventListener('click', () => this.setSelectedCoordinate({x, y}));
-                } else {
-                    cell.classList.add('pre-filled');
-                }
-                row.appendChild(cell);
-            }
-            this.tableElement.appendChild(row);
-        }
+    isValidSelection({x, y}) {
+        throw new Error('Subclasses must implement this method.');
     }
 
     getElement() {
@@ -97,14 +59,6 @@ class AdditionTable {
         }
         this.selectedCoordinate = undefined;
     }
-
-    isValidSelection({x, y}) {
-        // Pre-filled cells are not valid selections.
-        const isInBounds = x >= 1 && x < this.size && y >= 1 && y < this.size;
-        const isDiagonalOrAbove = y <= x;
-        return isInBounds && isDiagonalOrAbove;
-    }
-
     moveSelection({dx, dy}) {
         if (this.selectedCoordinate === undefined) {
             return;
@@ -134,7 +88,7 @@ class AdditionTable {
         }
 
         // Check for duplicates in rows.
-        for (let y = 0; y < this.size; y++) {
+        for (let y = 1; y < this.size; y++) {
             const symbols = new Set();
             const duplicates = new Set();
             for (let x = 0; x < this.size; x++) {
@@ -155,7 +109,7 @@ class AdditionTable {
         }
 
         // Check for duplicates in columns.
-        for (let x = 0; x < this.size; x++) {
+        for (let x = 1; x < this.size; x++) {
             const symbols = new Set();
             const duplicates = new Set();
             for (let y = 0; y < this.size; y++) {
@@ -177,6 +131,134 @@ class AdditionTable {
     }
 }
 
+class AdditionTable extends OperationTable {
+    constructor(size) {
+        super(size);
+    }
+
+    createTableElement(size) {
+        const tableElement = document.createElement('table');
+
+        const topRow = document.createElement('tr');
+
+        const operationLabelCell = document.createElement('td');
+        operationLabelCell.innerText = '+';
+        operationLabelCell.classList.add('operation-label-cell');
+
+        topRow.appendChild(operationLabelCell);
+
+        for (let x = 0; x < size; x++) {
+            const labelCell = document.createElement('td');
+            labelCell.innerText = getLabel(x);
+            labelCell.classList.add('label-cell');
+            topRow.appendChild(labelCell);
+        }
+
+        tableElement.appendChild(topRow);
+
+        for (let y = 0; y < size; y++) {
+            const row = document.createElement('tr');
+            const labelCell = document.createElement('td');
+            labelCell.innerText = getLabel(y);
+            labelCell.classList.add('label-cell');
+            row.appendChild(labelCell);
+            for (let x = 0; x < size; x++) {
+                const cell = document.createElement('td');
+                if (y == 0) {
+                    cell.innerText = getLabel(x);
+                    cell.classList.add('pre-filled');
+                } else if (x === 0) {
+                    cell.innerText = getLabel(y);
+                    cell.classList.add('pre-filled');
+                }
+                if (this.isValidSelection({x, y})) {
+                    cell.addEventListener('click', () => this.setSelectedCoordinate({x, y}));
+                } else {
+                    cell.classList.add('pre-filled');
+                }
+                row.appendChild(cell);
+            }
+            tableElement.appendChild(row);
+        }
+
+        return tableElement;
+    }
+
+    isValidSelection({x, y}) {
+        // Pre-filled cells are not valid selections.
+        const isInBounds = x >= 1 && x < this.size && y >= 1 && y < this.size;
+        const isDiagonalOrAbove = y <= x;
+        return isInBounds && isDiagonalOrAbove;
+    }
+}
+
+class MultiplicationTable extends OperationTable {
+    constructor(size) {
+        super(size);
+    }
+
+    createTableElement(size) {
+        const tableElement = document.createElement('table');
+
+        const topRow = document.createElement('tr');
+
+        const operationLabelCell = document.createElement('td');
+        operationLabelCell.innerText = '\u00d7';
+        operationLabelCell.classList.add('operation-label-cell');
+
+        topRow.appendChild(operationLabelCell);
+
+        for (let x = 0; x < size; x++) {
+            const labelCell = document.createElement('td');
+            labelCell.innerText = getLabel(x);
+            labelCell.classList.add('label-cell');
+            topRow.appendChild(labelCell);
+        }
+
+        tableElement.appendChild(topRow);
+
+        for (let y = 0; y < size; y++) {
+            const row = document.createElement('tr');
+            const labelCell = document.createElement('td');
+            labelCell.innerText = getLabel(y);
+            labelCell.classList.add('label-cell');
+            row.appendChild(labelCell);
+            for (let x = 0; x < size; x++) {
+                const cell = document.createElement('td');
+                if (y == 0) {
+                    cell.innerText = '0';
+                    cell.classList.add('pre-filled');
+                } else if (y == 1) {
+                    cell.innerText = getLabel(x);
+                    cell.classList.add('pre-filled');
+                } else if (x === 0) {
+                    cell.innerText = '0';
+                    cell.classList.add('pre-filled');
+                } else if (x == 1) {
+                    cell.innerText = getLabel(y);
+                    cell.classList.add('pre-filled');
+                }
+                if (this.isValidSelection({x, y})) {
+                    cell.addEventListener('click', () => this.setSelectedCoordinate({x, y}));
+                } else {
+                    cell.classList.add('pre-filled');
+                }
+                row.appendChild(cell);
+            }
+            tableElement.appendChild(row);
+        }
+
+        return tableElement;
+    }
+
+    isValidSelection({x, y}) {
+        // Pre-filled cells are not valid selections.
+        const isInBounds = x >= 2 && x < this.size && y >= 2 && y < this.size;
+        const isDiagonalOrAbove = y <= x;
+        return isInBounds && isDiagonalOrAbove;
+    }
+}
+
 const setupGame = (size) => {
     const playAreaElement = document.getElementsByClassName("play-area")[0];
 
@@ -185,7 +267,15 @@ const setupGame = (size) => {
     }
 
     const additionTable = new AdditionTable(size);
-    playAreaElement.appendChild(additionTable.getElement());
+    const additionTableElement = additionTable.getElement();
+    playAreaElement.appendChild(additionTableElement);
+
+    const multiplicationTable = new MultiplicationTable(size);
+    const multiplicationTableElement = multiplicationTable.getElement();
+    playAreaElement.appendChild(multiplicationTableElement);
+
+    additionTableElement.addEventListener('click', () => multiplicationTable.clearSelection());
+    multiplicationTableElement.addEventListener('click', () => additionTable.clearSelection());
 }
 
 const getLabel = (index) => {
@@ -193,10 +283,6 @@ const getLabel = (index) => {
         return index.toString();
     }
     return String.fromCharCode('a'.charCodeAt(0) + index - 2);
-}
-
-const createMultiplicationTable = (size) => {
-    const tableElement = document.createElement('table');
 }
 
 setupGame(5);

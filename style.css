@@ -32,3 +32,7 @@ td {
 .error {
     color: red;
 }
+
+.operation-label-cell {
+    font-size: 16px;
+}
