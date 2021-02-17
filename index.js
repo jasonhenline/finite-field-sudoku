@@ -44,6 +44,10 @@ class OperationTable {
         throw new Error('Subclasses must implement this method.');
     }
 
+    getOpString() {
+        throw new Error('Subclasses must implement this method.');
+    }
+
     getElement() {
         return this.tableElement;
     }
@@ -138,6 +142,48 @@ class OperationTable {
             }
         }
     }
+
+    getResultIndex({x, y}) {
+        const label = this.getElementAtCoordinate({x, y}).innerText;
+        if (label === '') {
+            return undefined;
+        }
+        return getIndex(label);
+    }
+
+    getAssociativeLawErrors() {
+        const errors = [];
+        // Check that (i % j) % k == i % (j % k).
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                for (let k = j; k < this.size; k++) {
+                    const iAndJ = this.getResultIndex({x: i, y: j});
+                    if (iAndJ === undefined) {
+                        continue;
+                    }
+                    const iAndJThenK = this.getResultIndex({x: iAndJ, y: k});
+                    if (iAndJThenK === undefined) {
+                        continue;
+                    }
+                    const jAndK = this.getResultIndex({x: j, y: k});
+                    if (jAndK === undefined) {
+                        continue;
+                    }
+                    const iThenJAndK = this.getResultIndex({x: i, y: jAndK});
+                    if (iThenJAndK === undefined) {
+                        continue;
+                    }
+
+                    if (iAndJThenK !== iThenJAndK) {
+                        const [iLabel, jLabel, kLabel, iAndJThenKLabel, iThenJAndKLabel] = [i, j, k, iAndJThenK, iThenJAndK].map(getLabel);
+                        const op = this.getOpString();
+                        errors.push(`(${iLabel} ${op} ${jLabel}) ${op} ${kLabel} = ${iAndJThenKLabel} does not equal ${iLabel} ${op} (${jLabel} ${op} ${kLabel}) = ${iThenJAndKLabel}`);
+                    }
+                }
+            }
+        }
+        return errors;
+    }
 }
 
 class AdditionTable extends OperationTable {
@@ -199,6 +245,10 @@ class AdditionTable extends OperationTable {
         const isInBounds = x >= 1 && x < this.size && y >= 1 && y < this.size;
         const isDiagonalOrAbove = y <= x;
         return isInBounds && isDiagonalOrAbove;
+    }
+
+    getOpString() {
+        return "+";
     }
 }
 
@@ -268,6 +318,10 @@ class MultiplicationTable extends OperationTable {
         const isDiagonalOrAbove = y <= x;
         return isInBounds && isDiagonalOrAbove;
     }
+
+    getOpString() {
+        return "*";
+    }
 }
 
 const setupGame = (size) => {
@@ -295,7 +349,35 @@ const setupGame = (size) => {
 }
 
 const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => {
-    const errors = [];
+    const associativeErrors = additionTable.getAssociativeLawErrors().concat(multiplicationTable.getAssociativeLawErrors());
+    const associativeLawErrorsSectionElement = document.getElementsByClassName('associative-law-errors-section')[0];
+    while (associativeLawErrorsSectionElement.firstChild) {
+        associativeLawErrorsSectionElement.removeChild(associativeLawErrorsSectionElement.firstChild);
+    }
+
+    if (associativeErrors.length) {
+        const heading = document.createElement('h2');
+        heading.innerText = "Associative Law Errors";
+        associativeLawErrorsSectionElement.appendChild(heading);
+
+        const errorListElement = document.createElement('ul');
+        errorListElement.classList.add('error-messages');
+
+        for (let errorMessage of associativeErrors) {
+            const errorListItem = document.createElement('li');
+            errorListItem.innerText = errorMessage;
+            errorListElement.appendChild(errorListItem);
+        }
+
+        associativeLawErrorsSectionElement.appendChild(errorListElement);
+    } else {
+        const heading = document.createElement('h2');
+        heading.innerText = "No Associative Law Errors";
+        associativeLawErrorsSectionElement.appendChild(heading);
+    }
+
+
+    const distributiveErrors = [];
     const size = additionTable.size;
 
     // Check that i * (j + k) == i * j + i * k.
@@ -331,7 +413,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
 
                 if (iTimesJPlusKLabel !== iTimesJPlusITimesKLabel) {
                     const [iLabel, jLabel, kLabel] = [i, j, k].map(getLabel);
-                    errors.push(`${iLabel}*(${jLabel} + ${kLabel}) = ${iTimesJPlusKLabel} does not equal ${iLabel}*${jLabel} + ${iLabel}*${kLabel} = ${iTimesJPlusITimesKLabel}`);
+                    distributiveErrors.push(`${iLabel}*(${jLabel} + ${kLabel}) = ${iTimesJPlusKLabel} does not equal ${iLabel}*${jLabel} + ${iLabel}*${kLabel} = ${iTimesJPlusITimesKLabel}`);
                 }
             }
         }
@@ -342,7 +424,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
         distributiveLawErrorsSectionElement.removeChild(distributiveLawErrorsSectionElement.firstChild);
     }
 
-    if (errors.length) {
+    if (distributiveErrors.length) {
         const heading = document.createElement('h2');
         heading.innerText = "Distributive Law Errors";
         distributiveLawErrorsSectionElement.appendChild(heading);
@@ -350,7 +432,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
         const errorListElement = document.createElement('ul');
         errorListElement.classList.add('error-messages');
 
-        for (let errorMessage of errors) {
+        for (let errorMessage of distributiveErrors) {
             const errorListItem = document.createElement('li');
             errorListItem.innerText = errorMessage;
             errorListElement.appendChild(errorListItem);
