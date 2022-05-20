@@ -62,3 +62,14 @@ body {
 .size-input, .start-button {
     font-size: 20px;
 }
+
+.buttons-area {
+    margin-top: 20px;
+}
+
+.buttons-area button {
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}

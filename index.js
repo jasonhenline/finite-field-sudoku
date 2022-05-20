@@ -324,12 +324,15 @@ class MultiplicationTable extends OperationTable {
     }
 }
 
+const removeAllChildren = (element) => {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
 const setupGame = (size) => {
     const playAreaElement = document.getElementsByClassName("play-area")[0];
-
-    while (playAreaElement.firstChild) {
-        playAreaElement.removeChild(playAreaElement.firstChild);
-    }
+    removeAllChildren(playAreaElement);
 
     const additionTable = new AdditionTable(size);
     const additionTableElement = additionTable.getElement();
@@ -346,6 +349,19 @@ const setupGame = (size) => {
     additionTable.registerChangeListener(checkDistributiveLaw);
     multiplicationTable.registerChangeListener(checkDistributiveLaw);
     checkDistributiveLaw();
+
+    const buttonsAreaElement = document.getElementsByClassName("buttons-area")[0];
+    removeAllChildren(buttonsAreaElement);
+    for (let i = 0; i < size; i++) {
+        const buttonElement = document.createElement("button");
+        const label = getLabel(i);
+        buttonElement.innerText = label;
+        buttonElement.addEventListener("click", () => {
+            additionTable.setValueAtSelection(label);
+            multiplicationTable.setValueAtSelection(label);
+        })
+        buttonsAreaElement.append(buttonElement);
+    }
 }
 
 const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => {
