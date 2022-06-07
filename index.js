@@ -183,7 +183,7 @@ class OperationTable {
                     if (iAndJThenK !== iThenJAndK) {
                         const [iLabel, jLabel, kLabel, iAndJThenKLabel, iThenJAndKLabel] = [i, j, k, iAndJThenK, iThenJAndK].map(getLabel);
                         const op = this.getOpString();
-                        errors.push(`((${iLabel}) ${op} (${jLabel})) ${op} (${kLabel}) = ${iAndJThenKLabel} does not equal (${iLabel}) ${op} ((${jLabel}) ${op} (${kLabel})) = ${iThenJAndKLabel}`);
+                        errors.push(`[(${iLabel}) ${op} (${jLabel})] ${op} (${kLabel}) = ${iAndJThenKLabel} does not equal (${iLabel}) ${op} [(${jLabel}) ${op} (${kLabel})] = ${iThenJAndKLabel}`);
                     }
                 }
             }
@@ -336,7 +336,7 @@ class MultiplicationTable extends OperationTable {
     }
 
     getOpString() {
-        return "*";
+        return "\u00d7";
     }
 }
 
@@ -502,7 +502,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
 
                 if (iTimesJPlusKIndex !== iTimesJPlusITimesKIndex) {
                     const [iLabel, jLabel, kLabel, iTimesJPlusKLabel, iTimesJPlusITimesKLabel] = [i, j, k, iTimesJPlusKIndex, iTimesJPlusITimesKIndex].map(getLabel);
-                    distributiveErrors.push(`(${iLabel})\u00d7((${jLabel}) + (${kLabel})) = ${iTimesJPlusKLabel} does not equal (${iLabel})\u00d7(${jLabel}) + (${iLabel})\u00d7(${kLabel}) = ${iTimesJPlusITimesKLabel}`);
+                    distributiveErrors.push(`(${iLabel})\u00d7[(${jLabel}) + (${kLabel})] = ${iTimesJPlusKLabel} does not equal (${iLabel})\u00d7(${jLabel}) + (${iLabel})\u00d7(${kLabel}) = ${iTimesJPlusITimesKLabel}`);
                 }
             }
         }
