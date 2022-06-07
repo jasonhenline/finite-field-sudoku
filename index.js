@@ -302,6 +302,7 @@ class MultiplicationTable extends OperationTable {
                     cell.classList.add('pre-filled');
                 } else if (y == 1) {
                     cell.innerText = getLabel(x);
+                    cell.dataset.index = x;
                     cell.classList.add('pre-filled');
                 } else if (x === 0) {
                     cell.innerText = '0';
