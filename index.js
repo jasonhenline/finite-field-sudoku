@@ -88,6 +88,7 @@ class OperationTable {
         selectedElement.innerText = label;
         const mirroredSelectedElement = this.getElementAtCoordinate({x: this.selectedCoordinate.y, y: this.selectedCoordinate.x});
         mirroredSelectedElement.innerText = label;
+        mirroredSelectedElement.dataset.index = index;
         this.setErrors();
 
         this.listenFunction && this.listenFunction();
@@ -376,6 +377,25 @@ const setupGame = (size) => {
     const buttonsAreaElement = document.getElementsByClassName('buttons-area')[0];
     removeAllChildren(buttonsAreaElement);
 
+    const buttonRowElement = document.createElement('tr');
+
+    for (let i = 0; i < size; i++) {
+        const buttonElement = document.createElement('button');
+        const label = getLabel(i);
+        buttonElement.innerText = label;
+        buttonElement.dataset.index = i;
+        buttonElement.addEventListener("click", () => {
+            additionTable.setValueAtSelection(i);
+            multiplicationTable.setValueAtSelection(i);
+        })
+
+        const divisionElement = document.createElement('td');
+        divisionElement.append(buttonElement);
+
+        buttonRowElement.append(divisionElement);
+    }
+
+
     const labelRowElement = document.createElement('tr');
 
     for (let i = 0; i < 2; i++) {
@@ -393,6 +413,15 @@ const setupGame = (size) => {
                 indexToLabel.set(i, event.target.value);
                 additionTable.relabel();
                 multiplicationTable.relabel();
+                const children = buttonRowElement.children;
+                for (let i = 0; i < children.length; i++) {
+                    const element = children[i].children[0];
+                    const indexString = element.dataset.index;
+                    if (indexString !== undefined) {
+                        const index = Number(indexString);
+                        element.innerText = getLabel(index);
+                    }
+                }
             }
         });
 
@@ -400,23 +429,6 @@ const setupGame = (size) => {
         divisionElement.append(inputElement);
 
         labelRowElement.append(divisionElement);
-    }
-
-    const buttonRowElement = document.createElement('tr');
-
-    for (let i = 0; i < size; i++) {
-        const buttonElement = document.createElement('button');
-        const label = getLabel(i);
-        buttonElement.innerText = label;
-        buttonElement.addEventListener("click", () => {
-            additionTable.setValueAtSelection(i);
-            multiplicationTable.setValueAtSelection(i);
-        })
-
-        const divisionElement = document.createElement('td');
-        divisionElement.append(buttonElement);
-
-        buttonRowElement.append(divisionElement);
     }
 
     const tableElement = document.createElement('table');
