@@ -183,7 +183,7 @@ class OperationTable {
                     if (iAndJThenK !== iThenJAndK) {
                         const [iLabel, jLabel, kLabel, iAndJThenKLabel, iThenJAndKLabel] = [i, j, k, iAndJThenK, iThenJAndK].map(getLabel);
                         const op = this.getOpString();
-                        errors.push(`(${iLabel} ${op} ${jLabel}) ${op} ${kLabel} = ${iAndJThenKLabel} does not equal ${iLabel} ${op} (${jLabel} ${op} ${kLabel}) = ${iThenJAndKLabel}`);
+                        errors.push(`((${iLabel}) ${op} (${jLabel})) ${op} (${kLabel}) = ${iAndJThenKLabel} does not equal (${iLabel}) ${op} ((${jLabel}) ${op} (${kLabel})) = ${iThenJAndKLabel}`);
                     }
                 }
             }
@@ -408,6 +408,10 @@ const setupGame = (size) => {
         const inputElement = document.createElement('input');
         const label = getLabel(i);
         inputElement.value = label;
+        inputElement.addEventListener('click', () => {
+            additionTable.clearSelection();
+            multiplicationTable.clearSelection();
+        })
         inputElement.addEventListener('input', (event) => {
             if (event.target.value) {
                 indexToLabel.set(i, event.target.value);
@@ -497,8 +501,8 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
                 }
 
                 if (iTimesJPlusKIndex !== iTimesJPlusITimesKIndex) {
-                    const [iLabel, jLabel, kLabel] = [i, j, k].map(getLabel);
-                    distributiveErrors.push(`${iLabel}*(${jLabel} + ${kLabel}) = ${iTimesJPlusKLabel} does not equal ${iLabel}*${jLabel} + ${iLabel}*${kLabel} = ${iTimesJPlusITimesKLabel}`);
+                    const [iLabel, jLabel, kLabel, iTimesJPlusKLabel, iTimesJPlusITimesKLabel] = [i, j, k, iTimesJPlusKIndex, iTimesJPlusITimesKIndex].map(getLabel);
+                    distributiveErrors.push(`(${iLabel})\u00d7((${jLabel}) + (${kLabel})) = ${iTimesJPlusKLabel} does not equal (${iLabel})\u00d7(${jLabel}) + (${iLabel})\u00d7(${kLabel}) = ${iTimesJPlusITimesKLabel}`);
                 }
             }
         }
