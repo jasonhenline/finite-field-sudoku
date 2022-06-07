@@ -93,6 +93,19 @@ class OperationTable {
         this.listenFunction && this.listenFunction();
     }
 
+    relabel() {
+        for (let y = -1; y < this.size; y++) {
+            for (let x = -1; x < this.size; x++) {
+                const index = this.getIndexAtCoordinate({x, y});
+                if (index === undefined) {
+                    continue;
+                }
+                const label = getLabel(index);
+                this.getElementAtCoordinate({x, y}).innerText = label;
+            }
+        }
+    }
+
     setErrors() {
         for (let y = 0; y < this.size; y++) {
             for (let x = 0; x < this.size; x++) {
@@ -374,7 +387,13 @@ const setupGame = (size) => {
         const inputElement = document.createElement('input');
         const label = getLabel(i);
         inputElement.value = label;
-        // TODO: Set up inputElement to update label on change.
+        inputElement.addEventListener('input', (event) => {
+            if (event.target.value) {
+                indexToLabel.set(i, event.target.value);
+                additionTable.relabel();
+                multiplicationTable.relabel();
+            }
+        });
 
         const divisionElement = document.createElement('td');
         divisionElement.append(inputElement);
