@@ -8,10 +8,10 @@ class OperationTable {
             if (event.key == "Escape") {
                 this.clearSelection();
             } else if (event.key == "Backspace") {
-                this.setValueAtSelection('');
+                this.setValueAtSelection(undefined);
                 this.moveSelection({dx: -1, dy: 0});
             } else if(event.key == "Delete") {
-                this.setValueAtSelection('');
+                this.setValueAtSelection(undefined);
             } else if (event.key == "ArrowDown") {
                 this.moveSelection({dx: 0, dy: 1});
             } else if (event.key == "ArrowLeft") {
@@ -20,14 +20,6 @@ class OperationTable {
                 this.moveSelection({dx: 1, dy: 0});
             } else if (event.key == "ArrowUp") {
                 this.moveSelection({dx: 0, dy: -1});
-            } else if (event.key == '0' || event.key == '1') {
-                this.setValueAtSelection(event.key);
-            } else if (event.key.length === 1) {
-                const charCode = event.key.charCodeAt(0);
-                const index = 2 + charCode - 'a'.charCodeAt(0);
-                if (index >= 0 && index < size) {
-                    this.setValueAtSelection(event.key);
-                }
             }
         });
     }
@@ -56,6 +48,11 @@ class OperationTable {
         return this.tableElement.children[y + 1].children[x + 1];
     }
 
+    getIndexAtCoordinate({x, y}) {
+        const indexString = this.tableElement.children[y + 1]?.children[x + 1]?.dataset.index;
+        return indexString === undefined ? undefined : Number(indexString);
+    }
+
     setSelectedCoordinate({x, y}) {
         this.clearSelection();
         this.selectedCoordinate = {x, y};
@@ -70,6 +67,7 @@ class OperationTable {
         }
         this.selectedCoordinate = undefined;
     }
+
     moveSelection({dx, dy}) {
         if (this.selectedCoordinate === undefined) {
             return;
@@ -80,14 +78,16 @@ class OperationTable {
         }
     }
 
-    setValueAtSelection(value) {
+    setValueAtSelection(index) {
         if (this.selectedCoordinate === undefined) {
             return;
         }
         const selectedElement = this.getElementAtCoordinate(this.selectedCoordinate);
-        selectedElement.innerText = value;
+        selectedElement.dataset.index = index;
+        const label = index === undefined ? '' : getLabel(index);
+        selectedElement.innerText = label;
         const mirroredSelectedElement = this.getElementAtCoordinate({x: this.selectedCoordinate.y, y: this.selectedCoordinate.x});
-        mirroredSelectedElement.innerText = value;
+        mirroredSelectedElement.innerText = label;
         this.setErrors();
 
         this.listenFunction && this.listenFunction();
@@ -143,33 +143,25 @@ class OperationTable {
         }
     }
 
-    getResultIndex({x, y}) {
-        const label = this.getElementAtCoordinate({x, y}).innerText;
-        if (label === '') {
-            return undefined;
-        }
-        return getIndex(label);
-    }
-
     getAssociativeLawErrors() {
         const errors = [];
         // Check that (i % j) % k == i % (j % k).
         for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
                 for (let k = j; k < this.size; k++) {
-                    const iAndJ = this.getResultIndex({x: i, y: j});
+                    const iAndJ = this.getIndexAtCoordinate({x: i, y: j});
                     if (iAndJ === undefined) {
                         continue;
                     }
-                    const iAndJThenK = this.getResultIndex({x: iAndJ, y: k});
+                    const iAndJThenK = this.getIndexAtCoordinate({x: iAndJ, y: k});
                     if (iAndJThenK === undefined) {
                         continue;
                     }
-                    const jAndK = this.getResultIndex({x: j, y: k});
+                    const jAndK = this.getIndexAtCoordinate({x: j, y: k});
                     if (jAndK === undefined) {
                         continue;
                     }
-                    const iThenJAndK = this.getResultIndex({x: i, y: jAndK});
+                    const iThenJAndK = this.getIndexAtCoordinate({x: i, y: jAndK});
                     if (iThenJAndK === undefined) {
                         continue;
                     }
@@ -205,6 +197,7 @@ class AdditionTable extends OperationTable {
         for (let x = 0; x < size; x++) {
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(x);
+            labelCell.dataset.index = x;
             labelCell.classList.add('label-cell');
             topRow.appendChild(labelCell);
         }
@@ -215,15 +208,18 @@ class AdditionTable extends OperationTable {
             const row = document.createElement('tr');
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(y);
+            labelCell.dataset.index = y;
             labelCell.classList.add('label-cell');
             row.appendChild(labelCell);
             for (let x = 0; x < size; x++) {
                 const cell = document.createElement('td');
                 if (y == 0) {
                     cell.innerText = getLabel(x);
+                    cell.dataset.index = x;
                     cell.classList.add('pre-filled');
                 } else if (x === 0) {
                     cell.innerText = getLabel(y);
+                    cell.dataset.index = y;
                     cell.classList.add('pre-filled');
                 }
                 if (this.isValidSelection({x, y})) {
@@ -271,6 +267,7 @@ class MultiplicationTable extends OperationTable {
         for (let x = 0; x < size; x++) {
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(x);
+            labelCell.dataset.index = x;
             labelCell.classList.add('label-cell');
             topRow.appendChild(labelCell);
         }
@@ -281,21 +278,25 @@ class MultiplicationTable extends OperationTable {
             const row = document.createElement('tr');
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(y);
+            labelCell.dataset.index = y;
             labelCell.classList.add('label-cell');
             row.appendChild(labelCell);
             for (let x = 0; x < size; x++) {
                 const cell = document.createElement('td');
                 if (y == 0) {
                     cell.innerText = '0';
+                    cell.dataset.index = '0';
                     cell.classList.add('pre-filled');
                 } else if (y == 1) {
                     cell.innerText = getLabel(x);
                     cell.classList.add('pre-filled');
                 } else if (x === 0) {
                     cell.innerText = '0';
+                    cell.dataset.index = '0'
                     cell.classList.add('pre-filled');
                 } else if (x == 1) {
                     cell.innerText = getLabel(y);
+                    cell.dataset.index = y;
                     cell.classList.add('pre-filled');
                 }
                 if (this.isValidSelection({x, y})) {
@@ -330,7 +331,15 @@ const removeAllChildren = (element) => {
     }
 }
 
+const indexToLabel = new Map();
+indexToLabel.set(0, '0');
+indexToLabel.set(1, '1');
+
 const setupGame = (size) => {
+    for (let i = 2; i < size; i++) {
+        indexToLabel.set(i, String.fromCharCode('a'.charCodeAt(0) + i - 2));
+    }
+
     const playAreaElement = document.getElementsByClassName("play-area")[0];
     removeAllChildren(playAreaElement);
 
@@ -350,18 +359,51 @@ const setupGame = (size) => {
     multiplicationTable.registerChangeListener(checkDistributiveLaw);
     checkDistributiveLaw();
 
-    const buttonsAreaElement = document.getElementsByClassName("buttons-area")[0];
+    const buttonsAreaElement = document.getElementsByClassName('buttons-area')[0];
     removeAllChildren(buttonsAreaElement);
+
+    const labelRowElement = document.createElement('tr');
+
+    for (let i = 0; i < 2; i++) {
+        const divisionElement = document.createElement('td');
+        labelRowElement.append(divisionElement);
+    }
+    
+
+    for (let i = 2; i < size; i++) {
+        const inputElement = document.createElement('input');
+        const label = getLabel(i);
+        inputElement.value = label;
+        // TODO: Set up inputElement to update label on change.
+
+        const divisionElement = document.createElement('td');
+        divisionElement.append(inputElement);
+
+        labelRowElement.append(divisionElement);
+    }
+
+    const buttonRowElement = document.createElement('tr');
+
     for (let i = 0; i < size; i++) {
-        const buttonElement = document.createElement("button");
+        const buttonElement = document.createElement('button');
         const label = getLabel(i);
         buttonElement.innerText = label;
         buttonElement.addEventListener("click", () => {
-            additionTable.setValueAtSelection(label);
-            multiplicationTable.setValueAtSelection(label);
+            additionTable.setValueAtSelection(i);
+            multiplicationTable.setValueAtSelection(i);
         })
-        buttonsAreaElement.append(buttonElement);
+
+        const divisionElement = document.createElement('td');
+        divisionElement.append(buttonElement);
+
+        buttonRowElement.append(divisionElement);
     }
+
+    const tableElement = document.createElement('table');
+    tableElement.append(labelRowElement);
+    tableElement.append(buttonRowElement);
+
+    buttonsAreaElement.append(tableElement);
 }
 
 const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => {
@@ -400,34 +442,29 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
             for (let k = j; k < size; k++) {
-                const jPlusKLabel = additionTable.getElementAtCoordinate({x: j, y: k}).innerText;
-                if (jPlusKLabel === '') {
+                const jPlusKIndex = additionTable.getIndexAtCoordinate({x: j, y: k});
+                if (jPlusKIndex === undefined) {
                     continue;
                 }
-                jPlusKIndex = getIndex(jPlusKLabel);
-                const iTimesJPlusKLabel = multiplicationTable.getElementAtCoordinate({x: i, y: jPlusKIndex}).innerText;
-                if (iTimesJPlusKLabel === '') {
-                    continue;
-                }
-
-                const iTimesJLabel = multiplicationTable.getElementAtCoordinate({x: i, y: j}).innerText;
-                if (iTimesJLabel === '') {
-                    continue;
-                }
-                const iTimesJIndex = getIndex(iTimesJLabel);
-
-                const iTimesKLabel = multiplicationTable.getElementAtCoordinate({x: i, y: k}).innerText;
-                if (iTimesKLabel === '') {
-                    continue;
-                }
-                const iTimesKIndex = getIndex(iTimesKLabel);
-
-                const iTimesJPlusITimesKLabel = additionTable.getElementAtCoordinate({x: iTimesJIndex, y: iTimesKIndex}).innerText;
-                if (iTimesJPlusITimesKLabel === '') {
+                const iTimesJPlusKIndex = multiplicationTable.getIndexAtCoordinate({x: i, y: jPlusKIndex});
+                if (iTimesJPlusKIndex === undefined) {
                     continue;
                 }
 
-                if (iTimesJPlusKLabel !== iTimesJPlusITimesKLabel) {
+                const iTimesJIndex = multiplicationTable.getIndexAtCoordinate({x: i, y: j});
+                if (iTimesJIndex === undefined) {
+                    continue;
+                }
+                const iTimesKIndex = multiplicationTable.getIndexAtCoordinate({x: i, y: k});
+                if (iTimesKIndex === undefined) {
+                    continue;
+                }
+                const iTimesJPlusITimesKIndex = additionTable.getIndexAtCoordinate({x: iTimesJIndex, y: iTimesKIndex});
+                if (iTimesJPlusITimesKIndex === undefined) {
+                    continue;
+                }
+
+                if (iTimesJPlusKIndex !== iTimesJPlusITimesKIndex) {
                     const [iLabel, jLabel, kLabel] = [i, j, k].map(getLabel);
                     distributiveErrors.push(`${iLabel}*(${jLabel} + ${kLabel}) = ${iTimesJPlusKLabel} does not equal ${iLabel}*${jLabel} + ${iLabel}*${kLabel} = ${iTimesJPlusITimesKLabel}`);
                 }
@@ -463,17 +500,7 @@ const getDistributiveLawChecker = (additionTable, multiplicationTable) => () => 
 }
 
 const getLabel = (index) => {
-    if (index <= 1) {
-        return index.toString();
-    }
-    return String.fromCharCode('a'.charCodeAt(0) + index - 2);
-}
-
-const getIndex = (label) => {
-    const isDigit = label == '0' || label == '1';
-    const baseChar = isDigit ? '0' : 'a';
-    const offset = isDigit ? 0 : 2
-    return label.charCodeAt(0) - baseChar.charCodeAt(0) + offset;
+    return indexToLabel.get(index);
 }
 
 const resetButtonElement = document.getElementsByClassName('start-button')[0];
