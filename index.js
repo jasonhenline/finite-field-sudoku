@@ -1,3 +1,19 @@
+const setIndexOnElement = (element, index) => {
+    if (index === undefined) {
+        delete element.dataset.index;
+    } else {
+        element.dataset.index = index;
+    }
+}
+
+const getIndexOnElement = (element) => {
+    if (element === undefined) {
+        return undefined;
+    } else {
+        return element.dataset.index;
+    }
+}
+
 class OperationTable {
     constructor(size) {
         this.size = size;
@@ -49,7 +65,7 @@ class OperationTable {
     }
 
     getIndexAtCoordinate({x, y}) {
-        const indexString = this.tableElement.children[y + 1]?.children[x + 1]?.dataset.index;
+        const indexString = getIndexOnElement(this.tableElement.children[y + 1]?.children[x + 1]);
         return indexString === undefined ? undefined : Number(indexString);
     }
 
@@ -83,12 +99,12 @@ class OperationTable {
             return;
         }
         const selectedElement = this.getElementAtCoordinate(this.selectedCoordinate);
-        selectedElement.dataset.index = index;
+        setIndexOnElement(selectedElement, index);
         const label = index === undefined ? '' : getLabel(index);
         selectedElement.innerText = label;
         const mirroredSelectedElement = this.getElementAtCoordinate({x: this.selectedCoordinate.y, y: this.selectedCoordinate.x});
         mirroredSelectedElement.innerText = label;
-        mirroredSelectedElement.dataset.index = index;
+        setIndexOnElement(mirroredSelectedElement, index);
         this.setErrors();
 
         this.listenFunction && this.listenFunction();
@@ -211,7 +227,7 @@ class AdditionTable extends OperationTable {
         for (let x = 0; x < size; x++) {
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(x);
-            labelCell.dataset.index = x;
+            setIndexOnElement(labelCell, x);
             labelCell.classList.add('label-cell');
             topRow.appendChild(labelCell);
         }
@@ -222,18 +238,18 @@ class AdditionTable extends OperationTable {
             const row = document.createElement('tr');
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(y);
-            labelCell.dataset.index = y;
+            setIndexOnElement(labelCell, y);
             labelCell.classList.add('label-cell');
             row.appendChild(labelCell);
             for (let x = 0; x < size; x++) {
                 const cell = document.createElement('td');
                 if (y == 0) {
                     cell.innerText = getLabel(x);
-                    cell.dataset.index = x;
+                    setIndexOnElement(cell, x);
                     cell.classList.add('pre-filled');
                 } else if (x === 0) {
                     cell.innerText = getLabel(y);
-                    cell.dataset.index = y;
+                    setIndexOnElement(cell, y);
                     cell.classList.add('pre-filled');
                 }
                 if (this.isValidSelection({x, y})) {
@@ -281,7 +297,7 @@ class MultiplicationTable extends OperationTable {
         for (let x = 0; x < size; x++) {
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(x);
-            labelCell.dataset.index = x;
+            setIndexOnElement(labelCell, x);
             labelCell.classList.add('label-cell');
             topRow.appendChild(labelCell);
         }
@@ -292,26 +308,26 @@ class MultiplicationTable extends OperationTable {
             const row = document.createElement('tr');
             const labelCell = document.createElement('td');
             labelCell.innerText = getLabel(y);
-            labelCell.dataset.index = y;
+            setIndexOnElement(labelCell, y);
             labelCell.classList.add('label-cell');
             row.appendChild(labelCell);
             for (let x = 0; x < size; x++) {
                 const cell = document.createElement('td');
                 if (y == 0) {
                     cell.innerText = '0';
-                    cell.dataset.index = '0';
+                    setIndexOnElement(cell, '0');
                     cell.classList.add('pre-filled');
                 } else if (y == 1) {
                     cell.innerText = getLabel(x);
-                    cell.dataset.index = x;
+                    setIndexOnElement(cell, x);
                     cell.classList.add('pre-filled');
                 } else if (x === 0) {
                     cell.innerText = '0';
-                    cell.dataset.index = '0'
+                    setIndexOnElement(cell, '0');
                     cell.classList.add('pre-filled');
                 } else if (x == 1) {
                     cell.innerText = getLabel(y);
-                    cell.dataset.index = y;
+                    setIndexOnElement(cell, y);
                     cell.classList.add('pre-filled');
                 }
                 if (this.isValidSelection({x, y})) {
@@ -383,7 +399,7 @@ const setupGame = (size) => {
         const buttonElement = document.createElement('button');
         const label = getLabel(i);
         buttonElement.innerText = label;
-        buttonElement.dataset.index = i;
+        setIndexOnElement(buttonElement, i);
         buttonElement.addEventListener("click", () => {
             additionTable.setValueAtSelection(i);
             multiplicationTable.setValueAtSelection(i);
@@ -394,12 +410,23 @@ const setupGame = (size) => {
 
         buttonRowElement.append(divisionElement);
     }
-
+    const clearButtonElement = document.createElement('button');
+    clearButtonElement.innerText = 'Clear';
+    clearButtonElement.addEventListener("click", () => {
+        additionTable.setValueAtSelection(undefined);
+        multiplicationTable.setValueAtSelection(undefined);
+    });
+    const clearButtonDivisionElement = document.createElement('td');
+    clearButtonDivisionElement.append(clearButtonElement);
+    buttonRowElement.append(clearButtonDivisionElement);
 
     const labelRowElement = document.createElement('tr');
 
     for (let i = 0; i < 2; i++) {
         const divisionElement = document.createElement('td');
+        if (i === 1) {
+            divisionElement.innerText = "Relabel:";
+        }
         labelRowElement.append(divisionElement);
     }
     
@@ -420,7 +447,7 @@ const setupGame = (size) => {
                 const children = buttonRowElement.children;
                 for (let i = 0; i < children.length; i++) {
                     const element = children[i].children[0];
-                    const indexString = element.dataset.index;
+                    const indexString = getIndexOnElement(element);
                     if (indexString !== undefined) {
                         const index = Number(indexString);
                         element.innerText = getLabel(index);
